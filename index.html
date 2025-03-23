@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APAE - Controle de Alunos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-group {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .botoes-presenca {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-presente {
+            background-color: #28a745;
+        }
+        .btn-ausente {
+            background-color: #dc3545;
+        }
+        .aluno {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .presente {
+            background-color: #d4edda;
+        }
+        .ausente {
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <h1>Controle de Alunos - APAE</h1>
+
+    <div class="form-group">
+        <input type="text" id="nome" placeholder="Nome do Aluno" required>
+        <input type="text" id="matricula" placeholder="Matrícula" required>
+        <button onclick="cadastrarAluno()">Cadastrar Aluno</button>
+    </div>
+
+    <div class="form-group">
+        <input type="date" id="dataPresenca" value="">
+    </div>
+
+    <div id="listaAlunos"></div>
+
+    <div class="form-group" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.location.href='relatorios.html'" style="background-color: #6c757d;">
+            Relatórios
+        </button>
+    </div>
+
+    <script>
+        let alunos = JSON.parse(localStorage.getItem('alunos')) || [];
+        
+        window.onload = function() {
+            document.getElementById('dataPresenca').valueAsDate = new Date();
+            atualizarLista();
+        };
+
+        function cadastrarAluno() {
+            const nome = document.getElementById('nome').value;
+            const matricula = document.getElementById('matricula').value;
+
+            if (nome && matricula) {
+                alunos.push({
+                    nome: nome,
+                    matricula: matricula,
+                    presencas: {}
+                });
+
+                localStorage.setItem('alunos', JSON.stringify(alunos));
+                document.getElementById('nome').value = '';
+                document.getElementById('matricula').value = '';
+                atualizarLista();
+            }
+        }
+
+        function marcarPresenca(index, status) {
+            const data = document.getElementById('dataPresenca').value;
+            if (!alunos[index].presencas) {
+                alunos[index].presencas = {};
+            }
+            alunos[index].presencas[data] = status;
+            localStorage.setItem('alunos', JSON.stringify(alunos));
+            atualizarLista();
+        }
+
+        function atualizarLista() {
+            const lista = document.getElementById('listaAlunos');
+            const data = document.getElementById('dataPresenca').value;
+            lista.innerHTML = '';
+
+            alunos.forEach((aluno, index) => {
+                const status = aluno.presencas && aluno.presencas[data];
+                const div = document.createElement('div');
+                div.className = `aluno ${status || ''}`;
+                div.innerHTML = `
+                    <div>
+                        <strong>${aluno.nome}</strong>
+                        <br>
+                        <small>Matrícula: ${aluno.matricula}</small>
+                        ${status ? `<br><small>Status em ${data}: ${status}</small>` : ''}
+                    </div>
+                    <div class="botoes-presenca">
+                        <button 
+                            class="btn-presente" 
+                            onclick="marcarPresenca(${index}, 'presente')"
+                        >
+                            Presente
+                        </button>
+                        <button 
+                            class="btn-ausente" 
+                            onclick="marcarPresenca(${index}, 'ausente')"
+                        >
+                            Ausente
+                        </button>
+                    </div>
+                `;
+                lista.appendChild(div);
+            });
+        }
+
+        document.getElementById('dataPresenca').addEventListener('change', atualizarLista);
+    </script>
+</body>
+</html>
